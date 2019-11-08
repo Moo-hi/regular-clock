@@ -1,0 +1,49 @@
+This file contains values that the ports of the microcontroller (Atmega328P) should be initialized with.
+
+These values are not to be messed with unless you know what you are doing.
+
+*PD7 can be initialized either as 0 or 1
+-----------------------------------
+PORT B:
+
+PB0: out
+PB1: out
+PB2: out
+PB3: out
+PB4: out
+PB5: out
+PB6: out
+PB7: out
+
+8421 8421
+7654 3210 
+0101 0101
+
+0x00 
+
+PORT C CURRENT:
+
+PC0: out
+PC1: out
+PC2: out
+PC3: out
+PC4: in
+PC5: in
+RST: ?
+PC7: ignore
+
+0000 1111
+8421 8421
+
+0x0F
+
+--
+PD0: 0		BUTTON
+PD1: 0		BUTTON
+PD2: 0 		RTC
+PD3: 0 		BUTTON
+ 
+PD4: 0 		DIGITS on/off
+PD5: 1		PIEZO
+PD6: 1 		WAKEUP LIGHT
+PD7: 0/1	UNUSED PIN*
