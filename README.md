@@ -1,5 +1,5 @@
 # regular-clock
- A regular clock with some extra functions. 
+ A regular alarm-clock with the usual functionality. 
 
 
 
