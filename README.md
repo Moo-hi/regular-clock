@@ -19,4 +19,5 @@
 
 
 
-# CREDITS (tbd)
+# CREDITS
+Circuit provider: Vesa Salminen
