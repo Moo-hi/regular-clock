@@ -1,15 +1,11 @@
 /*
- * regular-clock rev1 v1.0.c
+ * avr-alarm-clock v1.0.c
  *
  * Created: 20.9.2018 12.35.28
- * Author : Viljami M.
+ * Author : Viljami Mäkelä
+ * Notes  : Awfully written vocational school project, kept mostly intact for checking back in future
+ *			to see how far I've come in terms of programming skill.
  *
- * DISCLAIMER:
- * This is my very first project ever written 
- * so you should by no means expect it to be easy to understand & whatsoever.
- *
- * Please check out the revisioned version of this old school project here:
- * TBD
  */
  
 #define F_CPU 1000000UL
@@ -22,13 +18,33 @@ uint8_t tenminutes = 0;
 uint8_t tenhours = 0;
 uint8_t hours = 0, minutes = 0, seconds = 0; 
 uint8_t alar1 = 0, alar2 = 0, alar3 = 0, alar4 = 0; // stores set alarm
- 
-// vars for changing mode & to temporarily store modified time
-uint8_t mode;
-uint8_t a, b, c, d;
-uint8_t edit;
-uint8_t alarm_isSet = 0;        //if an alarm has been set, the value should be 1
- 
+
+// new stuff to be implemented:
+struct alarm // stores set alarm
+{
+	uint8_t DG1;
+	uint8_t DG2;
+	uint8_t DG3;
+	uint8_t DG4;
+};
+
+//implemented new stuff:
+struct runtime_registry // wrapped runtime variables
+{
+	// vars for changing mode & to temporarily store modified time
+	uint8_t mode;		// current program mode
+	
+	uint8_t edit;		// time edit mode (0 = off, 1 = on)
+	uint8_t a, b, c, d; // temporary time storage
+	
+	
+	uint8_t acceptTime_once;
+	uint8_t acceptAlarm_once;
+	
+	uint8_t alarm_on;        //if an alarm has been set, the value should be 1
+}; 
+
+
 // to count the number of overflows
 volatile uint8_t overflows;
  
@@ -73,7 +89,7 @@ volatile uint8_t overflows;
 void I2C_Init() {
     // at 16 MHz, the SCL frequency will be 16/(16+2(TWBR)), assuming prescaler of 0.
     // so for 100KHz SCL, TWBR = ((F_CPU/F_SCL)-16)/2 = ((16/0.1)-16)/2 = 144/2 = 72.
-    TWSR = 0; // set prescalar to zero
+    TWSR = 0; // set prescaler to zero
     TWBR = ((F_CPU / F_SCL) - 16) / 2; // set SCL frequency in TWI bit register
 }
  
@@ -205,7 +221,7 @@ uint8_t BCD2DEC(unsigned char x) {
  
 // LETTERS
 #define AA   0x88
-#define CC   0xC6
+#define CC   0xC6 
 #define Cc   0xA7
 #define Dd   0xA1
 #define EE   0x86
@@ -222,19 +238,12 @@ uint8_t BCD2DEC(unsigned char x) {
 #define UU   0xE3
 #define YY   0x11
 #define BL   0xFF
- 
+
+
 //BUTTONS LEFT TO RIGHT (SW4-SW2)
 uint8_t     SW4 = 0;
 uint8_t     SW3 = 0;
 uint8_t     SW2 = 0;
- 
-/*GENERAL TODO
-    -TIME DISPLAY                                                                                                                 [DONE]
-    -TIME                                                                                                                         [DONE]
-    -MODIFYING TIME                                                                                                               [DONE]
-    -RTC                                                                                                                          [DONE]
-    -ALARMS                                                                                                                       [DONE]
-*/
  
 //DIGITS & PIEZO
 void DG_ALLON()
@@ -261,7 +270,7 @@ void DG_ALLOFF()
  
 // FUNCTIONS //
 
-void word(uint8_t DG1, uint8_t DG2, uint8_t DG3, uint8_t DG4) //word v2.0 (displays a word)
+void word(uint8_t DG1, uint8_t DG2, uint8_t DG3, uint8_t DG4) // displays a word
 {	const uint8_t DGs[] = { DG1, DG2, DG3, DG4 };
     DG_ALLOFF();
     static int place = 0;
@@ -295,7 +304,7 @@ void word(uint8_t DG1, uint8_t DG2, uint8_t DG3, uint8_t DG4) //word v2.0 (displ
 // CURRENT TIME //
 const uint8_t num[10] = { 0x40, 0x79, 0x24, 0x30, 0x19, 0x12, 0x02, 0x78, 0x00, 0x10 };
  
-void now(uint8_t DG1, uint8_t DG2, uint8_t DG3, uint8_t DG4)
+void display(uint8_t DG1, uint8_t DG2, uint8_t DG3, uint8_t DG4)
 {
     const uint8_t DGs[] = { DG1, DG2, DG3, DG4 };
     DG_ALLOFF();
@@ -326,7 +335,7 @@ void now(uint8_t DG1, uint8_t DG2, uint8_t DG3, uint8_t DG4)
         }
     }
 }
-// 0 = experimental
+// 0 = testing
 // 1 = set time             (after initial setup accessible via SW4 + SW3 + SW2)
 // 2 = current time
 // 3 = set alarm
@@ -346,30 +355,9 @@ void I2C_WRITEREGISTER(uint8_t deviceRegister, uint8_t data) {
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
-uint8_t acceptTime_once = 0;
-void acceptTime()
-{
-    if (acceptTime_once == 0) 
-	{
-		I2C_WRITEREGISTER(0x02, (a << 4) | (b % 10));
-		I2C_WRITEREGISTER(0x01, (c << 4) | (d % 10));
-    }
- 
-    acceptTime_once = 1;
-}
- 
-uint8_t acceptAlarm_once = 0;
-void acceptAlarm()
-{
-    if (acceptAlarm_once == 0) {
-        alar1 = a;
-        alar2 = b;
-        alar3 = c;
-        alar4 = d;
-        alarm_isSet = 1;
-    }
-    acceptAlarm_once = 1;
-}
+
+void acceptTime(struct runtime_registry rreg);
+void acceptAlarm(struct runtime_registry rreg);
  
 void translateRTC()
 {
@@ -391,17 +379,18 @@ int main()
     DDRB = 0xFF;                    //LED PATTERN REGISTER
     DDRC = 0x0F; PORTC = 0x00;      //DIGITs (on-off)
     DDRD = 0x70; PORTD = 0x60;      //BUTTONS REGISTER
- 
-    a = 0, b = 0, c = 0, d = 0;     
-    mode = 1;               //start-up mode (mode 0 reserved for experimenting)
-    edit = 1;               // 0 - not editing, 1 - editing (time)
+	
+	struct runtime_registry rreg = {.mode=1, .edit=0, .a=0, .b=0, .c=0, .d=0, .acceptTime_once=0, .acceptAlarm_once=0, .alarm_on=0};
+     
+    rreg.mode = 1;               //start-up mode, default=1 (mode 0 reserved for experimenting)
+    rreg.edit = 1;               // 0 - not editing, 1 - editing (time)
  
     int delay_actual	= 500;
     int delay_holder	= 0;
     int enter_actual	= 0;   
     int enter_holder	= 0;
 	int enter_once[8]	= {0, 0, 0, 0, 0, 0, 0, 0};
-    uint8_t first_setup = 0;        //TRIGGER SETUP FACTORY RESET by turning value to zero
+    uint8_t first_setup = 0;
  
     uint8_t mode2_txtreset = 0;
     uint8_t mode3_txtreset = 0;
@@ -417,27 +406,31 @@ int main()
 		if(SW3 == 0 && SW2 == 0){delay_actual=10;}
 		if(SW3 != 0 && SW2 != 0){delay_actual=400;}
 		
-        //MODE
- 
-        if (mode == 0) {
 		
- 
-        } //mode reserved for testing
+		
+        //MODE
+
+        if (rreg.mode == 0) {
+			PZ_ON;
+			  if (delay_holder > delay_actual) { ++rreg.mode, delay_holder = 0; }
+			  else { ++delay_holder;PZ_OFF; }
+			
+        } //reserved for testing
  
         if (SW4 == 0 && SW3 != 0 && SW2 != 0) {
             
-            if (delay_holder > delay_actual) { ++mode, delay_holder = 0; }
+            if (delay_holder > delay_actual) { ++rreg.mode, delay_holder = 0; }
             else { ++delay_holder; }
  
         }
  
-        if (SW4 == 0 && SW3 == 0 && SW2 == 0 && first_setup >= 2 && mode != 3)
+        if (SW4 == 0 && SW3 == 0 && SW2 == 0 && first_setup >= 2 && rreg.mode != 3)
         {
-            acceptTime_once = 0; mode = 1; mode2_txtreset = 0; enter_holder = 0; edit = 1; a = tenhours, b = hours, c = tenminutes, d = minutes;
+            rreg.acceptTime_once = 0; rreg.mode = 1; mode2_txtreset = 0; enter_holder = 0; rreg.edit = 1; rreg.a = tenhours, rreg.b = hours, rreg.c = tenminutes, rreg.d = minutes;
         } //enter time adjustment
 ///////////////////////////////////////////////////////////////
-        if (mode == 1)
-        {	now(a, b, c, d); // display modified time value to be written	
+        if (rreg.mode == 1)
+        {	display(rreg.a, rreg.b, rreg.c, rreg.d); // display modified time value to be written	
 			if (enter_once[0] == 0) {enter_holder=0;enter_actual=20000;++enter_once[0];} else {enter_once[0] = 1;}
         setup_start:
             if (first_setup == 0) {
@@ -447,34 +440,34 @@ int main()
                 else { ++enter_holder; goto setup_start; };
             }
  
-            else if (first_setup >= 2 && edit == 1) {
+            else if (first_setup >= 2 && rreg.edit == 1) {
                 word(EE, Dd, II, TT);
 				if (enter_once[1] == 0) {enter_holder=0;enter_actual=20000;++enter_once[1];} else {enter_once[1] = 1;}
 				
-                if (enter_holder > enter_actual) { ++edit/*continue*/; }
+                if (enter_holder > enter_actual) { ++rreg.edit/*continue*/; }
                 else { ++enter_holder; goto setup_start; }
  
             }
  
  
-            if (edit == 2) { enter_holder = 900; }
+            if (rreg.edit == 2) { enter_holder = 900; }
  
             
         }
  
-        if (mode == 2) //DISPLAY CURRENT TIME
+        if (rreg.mode == 2) //DISPLAY CURRENT TIME
         {
-            if (edit >= 2) { --edit;}	//initial statements
+            if (rreg.edit >= 2) { --rreg.edit;}	//initial statements
 			if (enter_once[2] == 0) {enter_holder=0;enter_actual=15000;++enter_once[2];} else {enter_once[2] = 1;}	//
-			now(tenhours, hours, tenminutes, minutes); // show current time			
+			display(tenhours, hours, tenminutes, minutes); // show current time			
         setup_end:
-            if (mode2_txtreset == 0 && edit == 1) {
-                acceptTime(); word(GG, Oo, Oo, Dd);
+            if (mode2_txtreset == 0 && rreg.edit == 1) {
+                 word(GG, Oo, Oo, Dd); 
  
-                if (enter_holder > enter_actual) { ++first_setup; /*continue*/; }
+                if (enter_holder > enter_actual) { ++first_setup;acceptTime(rreg); /*continue*/; }
                 else { ++enter_holder; goto setup_end; };
  
-            } edit = 0;
+            } rreg.edit = 0;
  
             //AFTER SETUP (if first_setup is 2 or more, it was complete)
 			if (enter_once[3] == 0) {enter_holder=0;enter_actual=20000;++enter_once[3];} else {enter_once[3] = 1;}
@@ -488,8 +481,8 @@ int main()
         }
  
         // ALARM MODE
-        if (alarm_isSet == 2 && SW3 == 0) { alarm_isSet = 0; PZ_OFF;WL_OFF;acceptAlarm_once = 0;}
-        if (alarm_isSet == 1)
+        if (rreg.alarm_on == 2 && SW3 == 0) { rreg.alarm_on = 0; PZ_OFF;WL_OFF;rreg.acceptAlarm_once = 0;}
+        if (rreg.alarm_on == 1)
         {
             if
                 (
@@ -499,17 +492,17 @@ int main()
                     alar4 == minutes
                 )
             {
-                PZ_ON; alarm_isSet = 2;WL_ON;
+                PZ_ON; rreg.alarm_on = 2;WL_ON;
             }
  
         }
 		
-        if (mode == 3) //SET ALARMS (loans a function form mode 1)
-        {now(a, b, c, d); // display value to be written
+        if (rreg.mode == 3) //SET ALARMS (loans a function form mode 1)
+        {display(rreg.a, rreg.b, rreg.c, rreg.d); // display value to be written
 			    
 			      if (SW2==0 && SW4==0 && SW3==0)
-			      {	acceptAlarm_once = 0;
-			          uint8_t temp = 0; alarm_isSet = 0;
+			      {	rreg.acceptAlarm_once = 0;
+			          uint8_t temp = 0; rreg.alarm_on = 0;
 						if (enter_once[4] == 0) {enter_holder=0;enter_actual=20000;++enter_once[4];} else {enter_once[4] = 1;}
 			      alarm_declined:
 			          if (temp == 0) { word(CC, NN, CC, LL); }
@@ -524,7 +517,7 @@ int main()
 			      else { ++enter_holder; goto entrytext_mode3; };
 					  //welcome back
 			      if (SW2 == 0 && SW4 == 0) {
-			          acceptAlarm(); uint8_t temp = 0; alarm_isSet = 1;
+			          acceptAlarm(rreg); uint8_t temp = 0; rreg.alarm_on = 1;
 						if (enter_once[6] == 0) {enter_holder=0;enter_actual=20000;++enter_once[6];} else {enter_once[6] = 1;}
 			      alarm_accepted:
 			          if (temp == 0) { word(GG, Oo, Oo, Dd); }
@@ -538,7 +531,7 @@ int main()
 					  //reinvent easier way later
 					  RESET_enter_once;
 						
-						 /*enter_holder = 900;*/ mode = 2;
+						 /*enter_holder = 900;*/ rreg.mode = 2;
 			      }
 			      
 			      
@@ -546,54 +539,54 @@ int main()
  
  
         //END STATEMENTS BEFORE MODECYCLE
-        if (mode != 2) { mode2_txtreset = 0; }
-        if (mode != 3) { mode3_txtreset = 0; }
-        if (mode == 4) { RESET_enter_once; mode = 2; }                    //MODE OVERFLOW (return to first mode)
+        if (rreg.mode != 2) { mode2_txtreset = 0; }
+        if (rreg.mode != 3) { mode3_txtreset = 0; }
+        if (rreg.mode == 4) { RESET_enter_once; rreg.mode = 2; }                    //MODE OVERFLOW (return to first mode)
         if (first_setup == 2) { first_setup = 3; }
  
         // mode 1: set current time (FIRST MODE AFTER POWERCYCLE)
-        if (mode == 1 || mode == 3)
+        if (rreg.mode == 1 || rreg.mode == 3)
         {
             if (SW2 == 0 && SW3 != 0) //TIME ADDITION
             {
-                if (d <= 9)
+                if (rreg.d <= 9)
                 {
-                    if (delay_holder > delay_actual) { ++d, delay_holder = 0; }
+                    if (delay_holder > delay_actual) { ++rreg.d, delay_holder = 0; }
                     else { ++delay_holder; }
                 }
-                else { ++c, d = 0; }
+                else { ++rreg.c, rreg.d = 0; }
  
-                if (c > 5) { c = 0; ++b; }
-                if (b > 9) { b = 0; ++a; }
-                if (a == 2 && b == 3 && c == 5 && d == 9) { a = 0, b = 0, c = 0, d = 0; }
+                if (rreg.c > 5) { rreg.c = 0; ++rreg.b; }
+                if (rreg.b > 9) { rreg.b = 0; ++rreg.a; }
+                if (rreg.a == 2 && rreg.b == 3 && rreg.c == 5 && rreg.d == 9) { rreg.a = 0, rreg.b = 0, rreg.c = 0, rreg.d = 0; }
             }
  
             if (SW3 == 0 && SW2 != 0) //TIME DEDUCTION
             {
-                if (d >= 0)
+                if (rreg.d >= 0)
                 {
-                    if (delay_holder > delay_actual) { --d, delay_holder = 0; }
+                    if (delay_holder > delay_actual) { --rreg.d, delay_holder = 0; }
                     else { ++delay_holder; }
                 }
  
-                if (d > 250)
+                if (rreg.d > 250)
                 {
-                    d = 9;
-                    c--;
-                    if (c > 250)
+                    rreg.d = 9;
+                    rreg.c--;
+                    if (rreg.c > 250)
                     {
-                        c = 5;
-                        b--;
-                        if (b > 250)
+                        rreg.c = 5;
+                        rreg.b--;
+                        if (rreg.b > 250)
                         {
-                            b = 9;
-                            a--;
-                            if (a > 250)
+                            rreg.b = 9;
+                            rreg.a--;
+                            if (rreg.a > 250)
                             {
-                                a = 2;
-                                b = 3;
-                                c = 5;
-                                d = 9;
+                                rreg.a = 2;
+                                rreg.b = 3;
+                                rreg.c = 5;
+                                rreg.d = 9;
                             }
                         }
                     }
@@ -601,4 +594,27 @@ int main()
             }
         }
     }
+}
+
+void acceptTime(struct runtime_registry rreg)
+{
+	if (rreg.acceptTime_once == 0)
+	{
+		I2C_WRITEREGISTER(0x02, (rreg.a << 4) | (rreg.b % 10));
+		I2C_WRITEREGISTER(0x01, (rreg.c << 4) | (rreg.d % 10));
+	}
+	
+	rreg.acceptTime_once = 1;
+}
+
+void acceptAlarm(struct runtime_registry rreg)
+{
+	if (rreg.acceptAlarm_once == 0) {
+		alar1 = rreg.a;
+		alar2 = rreg.b;
+		alar3 = rreg.c;
+		alar4 = rreg.d;
+		rreg.alarm_on = 1;
+	}
+	rreg.acceptAlarm_once = 1;
 }
