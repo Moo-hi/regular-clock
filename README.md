@@ -1,5 +1,5 @@
-# regular-clock
- A regular alarm-clock with the usual functionality. 
+# avr-alarm-clock
+ A regular alarm clock with the usual functionality. 
 
 
 
@@ -20,4 +20,4 @@
 
 
 # CREDITS
-Circuit provider: Vesa Salminen
+Circuit by: Vesa Salminen
