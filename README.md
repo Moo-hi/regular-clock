@@ -19,5 +19,5 @@
 
 
 
-# CREDITS
-Circuit by: Vesa Salminen
+# Credits
+Circuit designed by: Vesa Salminen
