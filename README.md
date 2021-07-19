@@ -45,6 +45,8 @@ Now we just need to have the resulting value in hexadecimal:
 
 So our value in hexadecimal is 5D, designated in C-language with 0x-prefix as so: 0x5D
 
+# Circuit
+![image](https://user-images.githubusercontent.com/57489963/126193202-59e45f0e-cae4-4921-84c5-8d0e8f2d806b.png)
 
 
 # Credits
