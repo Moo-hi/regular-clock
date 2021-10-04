@@ -37,17 +37,18 @@ The above would be calculated:
 
 Now we just need to have the resulting value in hexadecimal:
 
->All 16            hex digits: 0 1 2 3 4 5 6 7 8 9 A  B  C  D  E  F
->Corresponding decimal digits: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+>All 16 hex digits, below them the corresponding values in decimal:    
+>0 1 2 3 4 5 6 7 8 9 A  B  C  D  E  F  
+>0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
 >
 >5 in hex  is: 5
 >13 in hex is: D
 
-So our value in hexadecimal is 5D, designated in C-language with 0x-prefix as so: 0x5D
+So our value in hexadecimal is 5D, designated in C-language with 0x-prefix (for hexadecimal) as so: 0x5D
 
 # Circuit
 ![image](https://user-images.githubusercontent.com/57489963/126193202-59e45f0e-cae4-4921-84c5-8d0e8f2d806b.png)
 
 
 # Credits
-Circuit designed by: Vesa Salminen
+Circuit design by Vesa Salminen
