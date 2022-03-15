@@ -1,6 +1,8 @@
 # Overview
  A regular alarm clock with the usual functionality you'd expect. 
  
+ User manuals: [ENG](/resources/Instruction_manuals/User_manual.pdf) [FI](/resources/Instruction_manuals/Käyttöohje.pdf)
+ 
  The project file should be opened in Atmel Studio 7.
 
 ## Port configuration
