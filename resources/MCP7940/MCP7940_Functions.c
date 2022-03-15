@@ -70,7 +70,7 @@ void MCP7940N_Disble_VBAT(){
 	I2C_WriteRegister(DAYOFWK_REGISTER, MCP7940Nregister);
 }
  
-// Separates higer bits from uint8_t. Set higer bits to 
+// Separates higer bits from uint8_t. Set higher bits to 
 // lower bits. Etc: 1101 0110 ==> 0000 1101
 uint8_t separateHigherBits(uint8_t bValue){
 	uint8_t hBits=0;
