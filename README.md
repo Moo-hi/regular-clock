@@ -1,5 +1,7 @@
 # Overview
  A regular alarm clock with the usual functionality you'd expect. 
+ 
+ The project file should be opened in Atmel Studio 7.
 
 ## Port configuration
 This portion contains values that the ports of the microcontroller (Atmega328P) should be initialized to.
