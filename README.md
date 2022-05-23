@@ -1,9 +1,9 @@
 # Overview
- A regular alarm clock with the usual functionality you'd expect. 
+ A digital clock with alarm functionality. Designed for Atmel ATmega328P microchip, software written in C.
  
  User manuals: [ENG](/resources/Instruction_manuals/User_manual.pdf) [FI](/resources/Instruction_manuals/Käyttöohje.pdf)
  
- The project file should be opened in Atmel Studio 7.
+ The solution file should be opened in Atmel Studio 7.
 
 ## Port configuration
 This portion contains values that the ports of the microcontroller (Atmega328P) should be initialized to.
