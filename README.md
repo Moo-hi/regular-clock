@@ -26,26 +26,62 @@ This portion contains values that the ports of the microcontroller (Atmega328P) 
 
 However if they need customization, you may use the following information to set the i/o:
 
->7654 3210 // ports
+>7654 3210 // ports represented in a byte
 >
->0101 1101 // values the corresponding ports above will be set to (0 for input, 1 for output)
+>xxxx xxxx // values the corresponding ports above will be set to (0 for input, 1 for output- example: 0000 1111 = 7654 are inputs, 3210 are outputs)
 >
->8421 8421 // binary positional notation for the first 4 digits
-
-The above would be calculated:
->8\*0, 4\*1, 2\*0, 1\*1 and 8\*1, 4\*1, 2\*0, 1\*1
-
->\= 5 and 13
+>8421 8421 // binary positional notation for each nibble (4-bit group) of the byte above, respectively - we will use this in the next phase
 
 
+Next up, we need to convert from binary to decimal
 
-Now we just need to have the resulting value in hexadecimal:
+If we had a value 0101 1101, it would be calculated like this:
+>8\*0 + 4\*1 + 2\*0 + 1\*1 and 8\*1 + 4\*1 + 2\*0 + 1\*1
 
->All 16 hex digits, below them the corresponding values in decimal:    
->0 1 2 3 4 5 6 7 8 9 A  B  C  D  E  F  
->0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+>\= 5 and 13, for each nibble of the byte, respectively
+
+
+
+Now we just need to have the resulting decimal values converted into hexadecimal.
+
+Read this like a dictionary, e.g. 10 means A, 8 means 8, 15 means F:
+
+>   
+>0 : 0 
 >
+>1 : 1
+>
+>2 : 2
+>
+>3 : 3
+>
+>4 : 4
+>
+>5 : 5
+>
+>6 : 6
+>
+>7 : 7
+>
+>8 : 8
+>
+>9 : 9
+>
+>10 : A
+>
+>11 : B
+>
+>12 : C
+>
+>13 : D
+>
+>14 : E
+>
+>15 : F
+
+So if we take our example value (0101 1101 aka. 5 and 13):
 >5 in hex  is: 5
+>
 >13 in hex is: D
 
 So our value in hexadecimal is 5D, designated in C-language with 0x-prefix (for hexadecimal) as so: 0x5D
