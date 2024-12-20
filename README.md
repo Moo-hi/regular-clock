@@ -1,5 +1,5 @@
 # Overview
-NOTE: This was one of the first programs I ever wrote, therefore the code is terrible.
+**NOTE: This was one of the first programs I ever wrote, therefore the code is terrible.**
 
  A digital clock with alarm functionality. Designed for Atmel ATmega328P microchip, software written in C. 
  
