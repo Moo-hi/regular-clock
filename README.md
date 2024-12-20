@@ -1,5 +1,7 @@
 # Overview
- A digital clock with alarm functionality. Designed for Atmel ATmega328P microchip, software written in C.
+NOTE: This was one of the first programs I ever wrote, therefore the code is terrible.
+
+ A digital clock with alarm functionality. Designed for Atmel ATmega328P microchip, software written in C. 
  
  User manuals: [ENG](/resources/Instruction_manuals/User_manual.pdf) [FI](/resources/Instruction_manuals/Käyttöohje.pdf)
  
